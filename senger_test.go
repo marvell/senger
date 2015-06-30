@@ -7,7 +7,7 @@ import (
 
 func TestMain(t *testing.T) {
 	log := NewDefaultLogger()
-	log.SetLevel(DBG_LEVEL)
+	log.SetLevel(DebugLevel)
 
 	log.Debug("debug")
 	log.Debug("debug with vars", 1, 2, 3)

@@ -9,31 +9,17 @@ import (
 	"runtime"
 )
 
-const (
-	DBG_LEVEL = 1<<iota - 1
-	INF_LEVEL
-	WRN_LEVEL
-	ERR_LEVEL
-	FAT_LEVEL
-)
-
-const (
-	DBG = "DBG"
-	INF = "INF"
-	WRN = "WRN"
-	ERR = "ERR"
-	FAT = "FAT"
-)
-
 const DEFAULT_FLAGS = log.Ldate | log.Ltime | log.Lmicroseconds
 
 type Logger struct {
 	l *log.Logger
 
-	level int
+	level *LoggerLevel
 }
 
-func NewLogger(w io.Writer, prefix string, lvl int) *Logger {
+var CallerColor = nMagenta
+
+func NewLogger(w io.Writer, prefix string, lvl *LoggerLevel) *Logger {
 	return &Logger{
 		l:     log.New(w, prefix, DEFAULT_FLAGS),
 		level: lvl,
@@ -41,17 +27,20 @@ func NewLogger(w io.Writer, prefix string, lvl int) *Logger {
 }
 
 func NewDefaultLogger() *Logger {
-	return NewLogger(os.Stdout, "", INF_LEVEL)
+	return NewLogger(os.Stdout, "", InfoLevel)
 }
 
-func (l *Logger) SetLevel(lvl int) {
+func (l *Logger) SetLevel(lvl *LoggerLevel) {
 	l.level = lvl
 }
 
+func (l *Logger) isLevel(lvl *LoggerLevel) bool {
+	return l.level.lvl <= lvl.lvl
+}
+
 func (l *Logger) debug(msg string, vars ...interface{}) {
-	if l.level <= DBG_LEVEL {
-		file, line := caller(3)
-		msg := fmt.Sprintf("[%s] %s:%d %s", DBG, file, line, msg)
+	if l.isLevel(DebugLevel) {
+		msg := fmt.Sprintf("%s %s %s", DebugLevel, caller(3), msg)
 		for i, v := range vars {
 			msg += fmt.Sprintf("\n\t%d: %#v", i, v)
 		}
@@ -67,8 +56,8 @@ func (l *Logger) Debugf(f string, vars ...interface{}) {
 }
 
 func (l *Logger) Info(msg string) {
-	if l.level <= INF_LEVEL {
-		l.l.Print(fmt.Sprintf("[%s] %s", INF, msg))
+	if l.isLevel(InfoLevel) {
+		l.l.Print(fmt.Sprintf("%s %s", InfoLevel, msg))
 	}
 }
 func (l *Logger) Infof(f string, vars ...interface{}) {
@@ -76,8 +65,8 @@ func (l *Logger) Infof(f string, vars ...interface{}) {
 }
 
 func (l *Logger) Warn(msg string) {
-	if l.level <= WRN_LEVEL {
-		l.l.Print(fmt.Sprintf("[%s] %s", WRN, msg))
+	if l.isLevel(WarnLevel) {
+		l.l.Print(fmt.Sprintf("%s %s", WarnLevel, msg))
 	}
 }
 func (l *Logger) Warnf(f string, vars ...interface{}) {
@@ -85,9 +74,8 @@ func (l *Logger) Warnf(f string, vars ...interface{}) {
 }
 
 func (l *Logger) error(msg interface{}) {
-	if l.level <= ERR_LEVEL {
-		file, line := caller(3)
-		msg = fmt.Sprintf("[%s] %s:%d %s", ERR, file, line, msg)
+	if l.isLevel(ErrorLevel) {
+		msg = fmt.Sprintf("%s %s %s", ErrorLevel, caller(3), msg)
 		l.l.Print(msg)
 	}
 }
@@ -99,8 +87,7 @@ func (l *Logger) Errorf(f string, vars ...interface{}) {
 }
 
 func (l *Logger) fatal(msg interface{}) {
-	file, line := caller(3)
-	msg = fmt.Sprintf("[%s] %s:%d %s", FAT, file, line, msg)
+	msg = fmt.Sprintf("%s %s %s", FatalLevel, caller(3), msg)
 	l.l.Print(msg)
 }
 func (l *Logger) Fatal(msg interface{}) {
@@ -112,9 +99,9 @@ func (l *Logger) Fatalf(f string, vars ...interface{}) {
 	os.Exit(1)
 }
 
-func caller(skip int) (file string, line int) {
-	_, file, line, _ = runtime.Caller(skip)
+func caller(skip int) string {
+	_, file, line, _ := runtime.Caller(skip)
 	file = path.Base(file)
 
-	return
+	return withColor(CallerColor, fmt.Sprintf("%s:%d", file, line))
 }
