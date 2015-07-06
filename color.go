@@ -32,6 +32,12 @@ var (
 )
 
 func isTTY() bool {
+	if forceColor := os.Getenv("SENGER_FORCE_COLOR"); forceColor != "" {
+		if forceColor == "true" || forceColor == "1" {
+			return true
+		}
+	}
+
 	fi, err := os.Stdout.Stat()
 	if err == nil {
 		m := os.ModeDevice | os.ModeCharDevice
