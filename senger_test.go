@@ -27,27 +27,3 @@ func TestMain(t *testing.T) {
 	// log.Fatalf("%#v", "fatalf")
 	// log.Fatal(errors.New("fatal error"))
 }
-
-func TestLevels(t *testing.T) {
-	log := NewDefaultLogger()
-
-	tests := []struct {
-		in  []string
-		out *LoggerLevel
-	}{
-		{[]string{"DEBUG", "DBG"}, DebugLevel},
-		{[]string{"INFO", "INF"}, InfoLevel},
-		{[]string{"WARNING", "WARN", "WRN"}, WarnLevel},
-		{[]string{"ERROR", "ERR"}, ErrorLevel},
-		{[]string{"FATAL", "FAT"}, FatalLevel},
-	}
-
-	for _, test := range tests {
-		for _, lvl := range test.in {
-			out := log.ParseLevel(lvl)
-			if out != test.out {
-				t.Errorf("ParseLevel(%s) = %s, want: %s", lvl, out, test.out)
-			}
-		}
-	}
-}

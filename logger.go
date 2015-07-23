@@ -143,20 +143,3 @@ func caller(skip int) string {
 
 	return withColor(CallerColor, fmt.Sprintf("%s:%d", file, line))
 }
-
-func (l *Logger) ParseLevel(lvl string) *LoggerLevel {
-	switch {
-	case lvl == "DEBUG" || lvl == "DBG":
-		return DebugLevel
-	case lvl == "INFO" || lvl == "INF":
-		return InfoLevel
-	case lvl == "WARNING" || lvl == "WRN" || lvl == "WARN":
-		return WarnLevel
-	case lvl == "ERROR" || lvl == "ERR":
-		return ErrorLevel
-	case lvl == "FATAL" || lvl == "FAT":
-		return FatalLevel
-	}
-
-	return nil
-}
